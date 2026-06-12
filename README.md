@@ -1,76 +1,113 @@
-# Quantitative Insurance Pricing Engine
-### Actuarial GLM vs. Gradient-Boosted Tweedie — A Frequency-Severity Risk Pricing Benchmark
+# Quantitative Insurance Pricing Engine  
+### Actuarial GLM vs Gradient-Boosted Tweedie — A Risk Pricing Benchmark  
 
-> A reproducible quantitative research prototype that pits a classical **Poisson-Gamma GLM** against a **LightGBM model trained under Tweedie loss** on 100,000 synthetic motor-insurance policies.
-> The core thesis: *Can machine learning outperform traditional actuarial statistics at both ranking risk and pricing it?*
+![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![Scikit-Learn](https://img.shields.io/badge/scikit--learn-Machine_Learning-orange)
+![LightGBM](https://img.shields.io/badge/LightGBM-Boosting_Model-brightgreen)
+
+> A reproducible quantitative research prototype comparing a classical **Poisson-Gamma Generalized Linear Model (GLM)** with a **LightGBM model trained under Tweedie loss** on a synthetic motor insurance portfolio of 100,000 policies.
 
 ---
 
 ## 1. Executive Summary
 
-This project simulates a portfolio of 100,000 policies with a known, deliberately non-linear risk structure (a U-shaped driver-age curve, mileage/vehicle-age loadings, and regional effects) alongside a zero-inflated, heavy-tailed loss distribution. Two pricing engines are trained on the identical dataset and benchmarked strictly out-of-sample on the metrics prioritized by actuarial and quantitative pricing desks: **risk discrimination** (Actuarial Gini) and **pricing accuracy** (Volume-Weighted Calibration Error).
+This project simulates an insurance portfolio with a known, non-linear risk structure (e.g., a U-shaped driver age risk curve, regional loadings) and evaluates two pricing frameworks under identical, out-of-sample conditions. 
 
-The results capture a fundamental trade-off in financial modeling—**predictive ranking power vs. absolute pricing stability:**
-
-| Model | Actuarial Gini (Higher = Better Ranking) | Calibration Error WMAPE (Lower = Better Pricing) |
+| Model | Actuarial Gini (Ranking Power) | Calibration Error WMAPE (Pricing Accuracy) |
 | :--- | :--- | :--- |
-| **Traditional GLM** (Poisson-Gamma) | 0.2249 | **3.50%** |
-| **LightGBM** (Tweedie Loss) | **0.2499** | 10.62% |
+| **Poisson-Gamma GLM** | 0.2249 | **3.50%** |
+| **LightGBM (Tweedie)** | **0.2499** | 10.62% |
 
-**Verdict:** LightGBM is the superior **underwriter** (accurately identifying high-risk profiles), while the GLM is the superior **accountant** (collecting the correct aggregate premium to maintain solvency). Neither model is optimally deployed in isolation.
+**The Core Insight:** Machine learning (LightGBM) excels at *risk discrimination* (ranking policies correctly), while traditional statistics (GLM) excels at *pricing stability and absolute calibration*. 
 
 ---
 
 ## 2. The Mathematical Problem
 
-Pure premium (the expected loss cost per policy) is the product of two distinct random processes:
+Pure premium (the expected loss cost per policy) is the product of two distinct processes:
 
 $$\mathbb{E}[\text{Pure Premium}] = \mathbb{E}[\text{Claim Frequency}] \times \mathbb{E}[\text{Claim Severity}]$$
 
-Modeling this financial data presents three significant quantitative hurdles:
-* **Zero-Inflation:** The vast majority of policyholders never file a claim, creating a massive point mass at exactly zero.
-* **Heavy-Tails:** The minority who do claim generate losses that follow a highly skewed, long-tailed distribution.
-* **Non-Linearity:** Underlying risk drivers (such as age) do not scale linearly or monotonically.
+Modeling this presents three distinct quantitative hurdles:
+1. **Zero Inflation:** The vast majority of policies generate exactly $0 in claims.
+2. **Heavy Tails:** Rare claims generate massive, heavily skewed losses.
+3. **Non-Linearity:** Underlying risk factors (like age) do not scale linearly.
 
-The **Tweedie distribution** (a compound Poisson-Gamma distribution parameterised by a variance power $1 < p < 2$) serves as the theoretical bridge for this structure, allowing the Gradient Booster to model the pure premium directly in a single step.
+<p align="center">
+  <img src="reports/figures/eda_claim_count.png" width="48%" title="Zero Inflation" />
+  <img src="reports/figures/eda_claim_cost.png" width="48%" title="Heavy Tail Severity" />
+</p>
 
 ---
 
 ## 3. Methodology
 
 ### Synthetic Data Engine
-A controlled stochastic simulator (`src/simulation/create_dataset.py`) generates 100,000 policies with a hidden ground-truth risk function, establishing an absolute mathematical target to evaluate model quality.
-* **Features:** `driver_age` (Beta), `vehicle_value` (Lognormal), `vehicle_age`, `annual_mileage`, `region`, and derived `driving_experience`.
-* **Frequency:** Modeled via $N \sim \text{Poisson}(\lambda)$, where $\lambda$ encodes a non-linear U-shaped age risk alongside mileage and regional scalar loadings.
-* **Severity:** Modeled via $X \sim \text{Gamma}(\alpha, \beta)$, dynamically scaled by `vehicle_value` and forced to exactly zero when no claim occurs.
+Generates 100,000 policies with hidden ground-truth risk dynamics. Frequency is modeled via a Poisson process with a non-linear $\lambda$, and severity is modeled via Gamma-distributed losses scaled by vehicle value.
 
-### Actuarial Baseline (Two-Step GLM)
-* **Poisson GLM** applied to claim counts via a logarithmic link function to predict expected frequency.
-* **Gamma GLM** applied exclusively to positive-claim rows to predict expected severity.
-* **Combined Output:** $\text{Expected Premium} = \text{Predicted Frequency} \times \text{Predicted Severity}$.
+### Actuarial Baseline (Two-Stage GLM)
+A classical statistical pipeline:
+* **Poisson GLM:** Models claim frequency.
+* **Gamma GLM:** Models claim severity (conditional on claims > 0).
+* **Output:** $\text{Pure Premium} = \hat{\lambda} \times \hat{\mu}$
 
-### Machine Learning Challenger
-* **LightGBM Regressor** utilizing the `tweedie` objective function ($p=1.5$).
-* Implements native categorical splitting and stochastic gradient boosting parameters to prevent in-sample memorization of the simulated risk surface.
+### Machine Learning Challenger (LightGBM)
+A single-stage gradient boosting model utilizing **Tweedie regression** ($1 < p < 2$). By setting the variance power parameter to $p = 1.5$, Tweedie bridges frequency and severity into a unified mathematical framework, capturing non-linear risk surfaces natively.
 
 ---
 
-## 4. Results & Interpretation
+## 4. Results & Evaluation
 
-**Risk Discrimination (LightGBM Wins)**
-The tree architecture naturally partitions the U-shaped age curve, successfully isolating the high-risk profiles of both young and old drivers without requiring manual splines or polynomial basis expansions—a structural blind spot for standard linear GLMs. This architectural advantage lifts the out-of-sample Actuarial Gini from 0.2249 to 0.2499, representing a materially stronger ability to segment and rank the riskiest policies.
+### Risk Discrimination (LightGBM Wins)
+LightGBM outperforms the GLM in ranking high-risk policies. Its tree architecture naturally partitions the non-linear, U-shaped age-risk curve and learns complex interaction effects without manual feature engineering, resulting in a visibly superior Actuarial Gini coefficient (larger area between the model curve and the random assignment line).
 
-**Pricing Accuracy (GLM Wins)**
-The Tweedie-boosted model is inherently sensitive to extreme long-tail claims, causing it to misprice absolute currency targets at the edges of the risk pool (resulting in a 10.62% Weighted Mean Absolute Percentage Error). Conversely, the rigid statistical constraints of the Poisson-Gamma structure inherently anchor predictions to population means, delivering a vastly superior calibration error of 3.50%. Deploying LightGBM directly to production would risk systematically overcharging safe drivers (causing churn) and undercharging risky ones (causing capital loss).
+<p align="center">
+  <img src="reports/figures/gini_GLM.png" width="48%" title="GLM Gini Curve" />
+  <img src="reports/figures/gini_Tweedie.png" width="48%" title="Tweedie Gini Curve" />
+</p>
 
-**Sanity Checks**
-* **Exploratory Data Analysis (EDA):** Log-scaled histograms confirm the successful generation of a zero-inflated, heavy-tailed target variable.
-* **Feature Importance:** Gain-based importance metrics confirm the LightGBM model successfully reverse-engineered the simulator's logic, surfacing `driver_age` and `vehicle_value` as the dominant quantitative risk factors.
+### Pricing Accuracy & Calibration (GLM Wins)
+The traditional GLM delivers vastly superior calibration. Its rigid structural constraints enforce smooth predictions and anchor the model tightly to population-level statistics (hugging the diagonal). LightGBM is highly sensitive to extreme tail events, causing it to structurally misprice absolute currency amounts at the edges of the risk pool.
+
+<p align="center">
+  <img src="reports/figures/calibration_GLM.png" width="48%" title="GLM Calibration" />
+  <img src="reports/figures/calibration_Tweedie.png" width="48%" title="Tweedie Calibration" />
+</p>
+
+### Business Value (Decile Lift Analysis)
+Both models successfully identify risk cohorts, proving business utility. Notice how the predicted premium perfectly tracks the actual losses in the GLM, whereas LightGBM shows minor predictive deviation in the highest risk deciles.
+
+<p align="center">
+  <img src="reports/figures/lift_GLM.png" width="48%" title="GLM Lift Chart" />
+  <img src="reports/figures/lift_Tweedie.png" width="48%" title="Tweedie Lift Chart" />
+</p>
+
+### Model Diagnostics & Sanity Checks
+LightGBM successfully reverse-engineered the hidden dynamics of the synthetic simulator, accurately identifying `vehicle_value` and `driver_age` as the dominant drivers of expected loss.
+
+<p align="center">
+  <img src="reports/figures/feature_importance.png" width="48%" title="Feature Importance" />
+  <img src="reports/figures/eda_correlation.png" width="48%" title="Feature Correlation Matrix" />
+</p>
 
 ---
 
-## 5. Strategic Conclusion
+## 5. The Enterprise Architecture
 
-> The enterprise pattern for quantitative risk pricing is a **hybrid architecture**. Quantitative developers should leverage Stochastic Gradient Boosting to discover complex, non-linear feature interactions, and subsequently feed those interactions as structural inputs into a rigidly calibrated Generalized Linear Model—or apply a post-hoc calibration layer (Isotonic Regression / Platt Scaling) directly onto the ML outputs to close the pricing gap.
+This prototype demonstrates that neither model is sufficient alone for production-grade pricing. The recommended deployment architecture is a **hybrid system**:
+1. Leverage **LightGBM** to capture complex, non-linear risk signals.
+2. Feed those outputs into a **GLM recalibration layer** (or apply Isotonic/Platt Scaling) to enforce regulatory-aligned calibration and stable premium outputs.
 
 ---
+
+## 6. Quickstart Execution
+
+```bash
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Execute the end-to-end orchestration pipeline
+python -m main
+
+# 3. Verify mathematical metric integrity
+pytest tests/
