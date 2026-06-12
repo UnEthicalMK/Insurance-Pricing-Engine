@@ -1,0 +1,200 @@
+{
+  "GLM": {
+    "model": "GLM",
+    "gini": 0.22488849963748717,
+    "calibration_error_pct": 3.501103294871829,
+    "decile_lift": [
+      {
+        "decile": 0,
+        "avg_actual_loss_per_decile": 117.300825
+      },
+      {
+        "decile": 1,
+        "avg_actual_loss_per_decile": 163.70373999999998
+      },
+      {
+        "decile": 2,
+        "avg_actual_loss_per_decile": 161.45336
+      },
+      {
+        "decile": 3,
+        "avg_actual_loss_per_decile": 177.173575
+      },
+      {
+        "decile": 4,
+        "avg_actual_loss_per_decile": 201.51863
+      },
+      {
+        "decile": 5,
+        "avg_actual_loss_per_decile": 207.48062
+      },
+      {
+        "decile": 6,
+        "avg_actual_loss_per_decile": 234.153435
+      },
+      {
+        "decile": 7,
+        "avg_actual_loss_per_decile": 268.67161
+      },
+      {
+        "decile": 8,
+        "avg_actual_loss_per_decile": 300.44196
+      },
+      {
+        "decile": 9,
+        "avg_actual_loss_per_decile": 414.18909499999995
+      }
+    ],
+    "calibration": [
+      {
+        "bucket": 0,
+        "predicted": 122.52618261827585,
+        "actual": 117.300825
+      },
+      {
+        "bucket": 1,
+        "predicted": 148.419691240539,
+        "actual": 163.70373999999998
+      },
+      {
+        "bucket": 2,
+        "predicted": 165.65887890041788,
+        "actual": 161.45336
+      },
+      {
+        "bucket": 3,
+        "predicted": 181.04909913056204,
+        "actual": 177.173575
+      },
+      {
+        "bucket": 4,
+        "predicted": 196.5356323864273,
+        "actual": 201.51863
+      },
+      {
+        "bucket": 5,
+        "predicted": 213.23505967892285,
+        "actual": 207.48062
+      },
+      {
+        "bucket": 6,
+        "predicted": 232.41481397258175,
+        "actual": 234.153435
+      },
+      {
+        "bucket": 7,
+        "predicted": 257.27169247105405,
+        "actual": 268.67161
+      },
+      {
+        "bucket": 8,
+        "predicted": 292.8251429989589,
+        "actual": 300.44196
+      },
+      {
+        "bucket": 9,
+        "predicted": 399.026606737329,
+        "actual": 414.18909499999995
+      }
+    ]
+  },
+  "Tweedie": {
+    "model": "Tweedie",
+    "gini": 0.24986606667824346,
+    "calibration_error_pct": 10.616579686131129,
+    "decile_lift": [
+      {
+        "decile": 0,
+        "avg_actual_loss_per_decile": 129.713785
+      },
+      {
+        "decile": 1,
+        "avg_actual_loss_per_decile": 141.36898000000002
+      },
+      {
+        "decile": 2,
+        "avg_actual_loss_per_decile": 148.20548000000002
+      },
+      {
+        "decile": 3,
+        "avg_actual_loss_per_decile": 155.532
+      },
+      {
+        "decile": 4,
+        "avg_actual_loss_per_decile": 203.805635
+      },
+      {
+        "decile": 5,
+        "avg_actual_loss_per_decile": 211.21273499999998
+      },
+      {
+        "decile": 6,
+        "avg_actual_loss_per_decile": 235.600675
+      },
+      {
+        "decile": 7,
+        "avg_actual_loss_per_decile": 256.890505
+      },
+      {
+        "decile": 8,
+        "avg_actual_loss_per_decile": 324.07902
+      },
+      {
+        "decile": 9,
+        "avg_actual_loss_per_decile": 439.67803499999997
+      }
+    ],
+    "calibration": [
+      {
+        "bucket": 0,
+        "predicted": 81.23514923063964,
+        "actual": 129.713785
+      },
+      {
+        "bucket": 1,
+        "predicted": 116.61160097533856,
+        "actual": 141.36898000000002
+      },
+      {
+        "bucket": 2,
+        "predicted": 137.0547444151554,
+        "actual": 148.20548000000002
+      },
+      {
+        "bucket": 3,
+        "predicted": 155.55418611748286,
+        "actual": 155.532
+      },
+      {
+        "bucket": 4,
+        "predicted": 174.32335717391476,
+        "actual": 203.805635
+      },
+      {
+        "bucket": 5,
+        "predicted": 195.06482919811384,
+        "actual": 211.21273499999998
+      },
+      {
+        "bucket": 6,
+        "predicted": 218.4530956006926,
+        "actual": 235.600675
+      },
+      {
+        "bucket": 7,
+        "predicted": 246.54109254860458,
+        "actual": 256.890505
+      },
+      {
+        "bucket": 8,
+        "predicted": 291.3433898817715,
+        "actual": 324.07902
+      },
+      {
+        "bucket": 9,
+        "predicted": 440.65527120726455,
+        "actual": 439.67803499999997
+      }
+    ]
+  }
+}
